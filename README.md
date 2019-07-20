@@ -4,7 +4,7 @@ A GUI to convert video files to AV1 using SVT-AV1
 
 (Screenshot goes here)
 
-I wrote this software to test the rav1e software. Unfortunately, at the current state, rav1e is single-threaded. This GUI solves the issue and enable multithreading by converting and splitting the input video file into segments of the length specified by the user in y4m format and encoding the audio to Opus ffmpeg. It then encodes each file using a CPU thread. After the encoding is finished, the .ivf files are concatenated. Lastly, the .ivf and .opus files are merged into a .webm or .mkv container.
+I wrote this software to encode video files to AV1 using SVT-AV1.
 
 Written in Visual Basic .NET using Visual Studio 2019.
 
