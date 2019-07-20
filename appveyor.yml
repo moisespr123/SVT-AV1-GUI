@@ -1,0 +1,5 @@
+image: Visual Studio 2019
+configuration: Release
+
+artifacts:
+ - path: svt-av1_gui\bin\Release\svtav1_gui.exe

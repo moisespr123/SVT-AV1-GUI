@@ -1,0 +1,6 @@
+language: csharp
+solution: svt-av1_gui.sln
+
+os:
+- linux
+- osx
