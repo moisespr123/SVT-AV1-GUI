@@ -16,6 +16,6 @@ Builds comes with opusenc and SVT-AV1 bundled, but not ffmpeg due to licensing r
 
 # Updated components builds:
 
-Ocasionally, SVT-AV1 and opusenc gets updated. You can download the latest version of SVT-AV1 GUI with these updated tools included here: [https://moisescardona.me/rav1e-gui](https://moisescardona.me/rav1e-gui)
+Ocasionally, SVT-AV1 and opusenc gets updated. You can download the latest version of SVT-AV1 GUI with these updated tools included here: [https://moisescardona.me/svt-av1-gui](https://moisescardona.me/svt-av1-gui)
 
 Enjoy!
