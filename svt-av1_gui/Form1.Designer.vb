@@ -32,6 +32,8 @@ Partial Class Form1
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.AdditionalArguments = New System.Windows.Forms.TextBox()
+        Me.Label4 = New System.Windows.Forms.Label()
         Me.columns = New System.Windows.Forms.NumericUpDown()
         Me.Label11 = New System.Windows.Forms.Label()
         Me.rows = New System.Windows.Forms.NumericUpDown()
@@ -57,8 +59,6 @@ Partial Class Form1
         Me.PauseResumeButton = New System.Windows.Forms.Button()
         Me.ClearLogBtn = New System.Windows.Forms.Button()
         Me.SaveLogBtn = New System.Windows.Forms.Button()
-        Me.Label4 = New System.Windows.Forms.Label()
-        Me.AdditionalArguments = New System.Windows.Forms.TextBox()
         Me.GroupBox1.SuspendLayout()
         CType(Me.columns, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.rows, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -185,6 +185,24 @@ Partial Class Form1
         Me.GroupBox1.TabIndex = 15
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Encoder Options"
+        '
+        'AdditionalArguments
+        '
+        Me.AdditionalArguments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.AdditionalArguments.Location = New System.Drawing.Point(9, 98)
+        Me.AdditionalArguments.Name = "AdditionalArguments"
+        Me.AdditionalArguments.Size = New System.Drawing.Size(415, 20)
+        Me.AdditionalArguments.TabIndex = 45
+        '
+        'Label4
+        '
+        Me.Label4.AutoSize = True
+        Me.Label4.Location = New System.Drawing.Point(6, 82)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(108, 13)
+        Me.Label4.TabIndex = 44
+        Me.Label4.Text = "Additional arguments:"
         '
         'columns
         '
@@ -458,24 +476,6 @@ Partial Class Form1
         Me.SaveLogBtn.TabIndex = 19
         Me.SaveLogBtn.Text = "Save Log"
         Me.SaveLogBtn.UseVisualStyleBackColor = True
-        '
-        'Label4
-        '
-        Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(6, 82)
-        Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(108, 13)
-        Me.Label4.TabIndex = 44
-        Me.Label4.Text = "Additional arguments:"
-        '
-        'AdditionalArguments
-        '
-        Me.AdditionalArguments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.AdditionalArguments.Location = New System.Drawing.Point(9, 98)
-        Me.AdditionalArguments.Name = "AdditionalArguments"
-        Me.AdditionalArguments.Size = New System.Drawing.Size(415, 20)
-        Me.AdditionalArguments.TabIndex = 45
         '
         'Form1
         '

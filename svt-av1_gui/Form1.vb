@@ -6,21 +6,24 @@ Public Class Form1
     Private Sub InputBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputBrowseBtn.Click
         Dim InputBrowser As New OpenFileDialog With {
             .Title = "Browse for a video file",
-            .FileName = "",
+            .FileName = IO.Path.GetFileName(InputTxt.Text),
             .Filter = "All Files|*.*"
         }
+        If Not String.IsNullOrEmpty(InputTxt.Text) Then InputBrowser.InitialDirectory = IO.Path.GetDirectoryName(InputTxt.Text)
         Dim OkAction As MsgBoxResult = InputBrowser.ShowDialog
         If OkAction = MsgBoxResult.Ok Then
             InputTxt.Text = InputBrowser.FileName
+            OutputTxt.Text = IO.Path.ChangeExtension(InputBrowser.FileName, ".webm")
         End If
     End Sub
 
     Private Sub OutputBrowseBtn_Click(sender As Object, e As EventArgs) Handles OutputBrowseBtn.Click
         Dim OutputBrowser As New SaveFileDialog With {
             .Title = "Save Video File",
-            .FileName = "",
+            .FileName = IO.Path.GetFileName(OutputTxt.Text),
             .Filter = "WebM|*.webm|Matroska|*.mkv"
         }
+        If Not String.IsNullOrEmpty(OutputTxt.Text) Then OutputBrowser.InitialDirectory = IO.Path.GetDirectoryName(OutputTxt.Text)
         Dim OkAction As MsgBoxResult = OutputBrowser.ShowDialog
         If OkAction = MsgBoxResult.Ok Then
             OutputTxt.Text = OutputBrowser.FileName
@@ -101,7 +104,7 @@ Public Class Form1
             End If
             DisableElements()
             If Not IO.Path.GetExtension(OutputTxt.Text) = ".webm" And Not IO.Path.GetExtension(OutputTxt.Text) = ".mkv" Then
-                OutputTxt.Text = My.Computer.FileSystem.GetParentPath(OutputTxt.Text) + "\" + IO.Path.GetFileNameWithoutExtension(OutputTxt.Text) + ".webm"
+                OutputTxt.Text = OutputTxt.Text = IO.Path.ChangeExtension(OutputTxt.Text, ".webm")
             End If
             My.Computer.FileSystem.WriteAllText(tempLocationPath.Text + "\lock", OutputTxt.Text, False)
             Dim StartTasks As New Thread(Sub() Part1())
@@ -209,7 +212,11 @@ Public Class Form1
         Dim ffmpegProcessInfo As New ProcessStartInfo
         Dim ffmpegProcess As Process
         ffmpegProcessInfo.FileName = "ffmpeg.exe"
-        ffmpegProcessInfo.Arguments = "-i """ + tempFolder + "\ivf-video.ivf"" -i """ + tempFolder + "\opus-audio.opus"" -c:v copy -c:a copy """ + output + """ -y"
+        If IO.File.Exists(tempFolder + "\opus-audio.opus") Then
+            ffmpegProcessInfo.Arguments = "-i """ + tempFolder + "\ivf-video.ivf"" -i """ + tempFolder + "\opus-audio.opus"" -c:v copy -c:a copy """ + output + """ -y"
+        Else
+            ffmpegProcessInfo.Arguments = "-i """ + tempFolder + "\ivf-video.ivf"" -c:v copy """ + output + """ -y"
+        End If
         ffmpegProcessInfo.CreateNoWindow = True
         ffmpegProcessInfo.RedirectStandardOutput = False
         ffmpegProcessInfo.UseShellExecute = False
@@ -379,7 +386,9 @@ Public Class Form1
         End If
     End Sub
     Private Sub Form1_DragDrop(sender As Object, e As DragEventArgs) Handles MyBase.DragDrop
-        InputTxt.Text = CType(e.Data.GetData(DataFormats.FileDrop), String())(0)
+        Dim Filename As String = CType(e.Data.GetData(DataFormats.FileDrop), String())(0)
+        InputTxt.Text = Filename
+        OutputTxt.Text = IO.Path.ChangeExtension(Filename, ".webm")
     End Sub
 
     Private Sub PauseResumeButton_Click(sender As Object, e As EventArgs) Handles PauseResumeButton.Click
@@ -453,5 +462,9 @@ Public Class Form1
             My.Settings.AdditionalArguments = AdditionalArguments.Text
             My.Settings.Save()
         End If
+    End Sub
+
+    Private Sub InputTxt_TextChanged(sender As Object, e As EventArgs) Handles InputTxt.TextChanged
+        OutputTxt.Text = IO.Path.ChangeExtension(InputTxt.Text, ".webm")
     End Sub
 End Class
