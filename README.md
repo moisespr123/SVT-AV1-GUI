@@ -1,8 +1,8 @@
-# SVT-AV1 GUI [![Travis Build Status](https://travis-ci.org/moisesmcardona/svt-av1-gui.svg?branch=master)](https://travis-ci.org/moisesmcardona/svt-av1-gui) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/moisesmcardona/svt-av1-gui?branch=master&svg=true)](https://ci.appveyor.com/project/moisesmcardona/svt-av1-gui)
+# SVT-AV1 GUI
 
 A GUI to convert video files to AV1 using SVT-AV1
 
-(Screenshot goes here)
+![v1.0 Screenshot](https://moisescardona.me/wp-content/uploads/2019/07/SVT-AV1-GUI-v1.0.jpg)
 
 I wrote this software to encode video files to AV1 using SVT-AV1.
 
