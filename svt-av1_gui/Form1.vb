@@ -1,8 +1,8 @@
 ﻿Imports System.Threading
 
 Public Class Form1
-    Private Exiting As Boolean = False
     Private GUILoaded As Boolean = False
+    Private Const PipeBuffer As Integer = 1024 * 1024 * 1024
     Private Sub InputBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputBrowseBtn.Click
         Dim InputBrowser As New OpenFileDialog With {
             .Title = "Browse for a video file",
@@ -34,7 +34,7 @@ Public Class Form1
             Dim videoFound As Boolean = False
             Dim CheckTempFolder As String() = IO.Directory.GetFiles(tempLocationPath.Text)
             If CheckTempFolder.Count > 0 Then
-                If CheckTempFolder.Contains(tempLocationPath.Text + "\lock") And CheckTempFolder.Contains(tempLocationPath.Text + "\y4m-video.y4m") Then
+                If CheckTempFolder.Contains(tempLocationPath.Text + "\lock") And CheckTempFolder.Contains(tempLocationPath.Text + "\InputVideo") Then
                     videoFound = True
                 End If
             End If
@@ -46,9 +46,7 @@ Public Class Form1
                 Else
                     Dim result2 As DialogResult = MsgBox("Do you want to clean the folder?", MsgBoxStyle.YesNo)
                     If result2 = DialogResult.Yes Then
-                        For Each ItemToDelete In CheckTempFolder
-                            If ItemToDelete.Contains(".ivf") Or ItemToDelete.Contains(".txt") Or ItemToDelete.Contains(".y4m") Or ItemToDelete.Contains(".opus") Then My.Computer.FileSystem.DeleteFile(ItemToDelete)
-                        Next
+                        clean_temp_folder(tempLocationPath.Text)
                     End If
                 End If
             End If
@@ -94,9 +92,7 @@ Public Class Form1
                     If item.Contains(".ivf") Or item.Contains(".y4m") Or item.Contains(".opus") Then
                         Dim result As DialogResult = MsgBox("The temporary folder contains temporary files. It is recommended that the folder is cleaned up for best results. Otherwise, you could get an incorrect AV1 file. Do you want to clean the folder?", MsgBoxStyle.YesNo)
                         If result = DialogResult.Yes Then
-                            For Each ItemToDelete In CheckTempFolder
-                                If ItemToDelete.Contains(".ivf") Or ItemToDelete.Contains(".y4m") Or ItemToDelete.Contains(".opus") Then My.Computer.FileSystem.DeleteFile(ItemToDelete)
-                            Next
+                            clean_temp_folder(tempLocationPath.Text)
                         End If
                         Exit For
                     End If
@@ -106,7 +102,8 @@ Public Class Form1
             If Not IO.Path.GetExtension(OutputTxt.Text) = ".webm" And Not IO.Path.GetExtension(OutputTxt.Text) = ".mkv" Then
                 OutputTxt.Text = OutputTxt.Text = IO.Path.ChangeExtension(OutputTxt.Text, ".webm")
             End If
-            My.Computer.FileSystem.WriteAllText(tempLocationPath.Text + "\lock", OutputTxt.Text, False)
+            IO.File.WriteAllText(tempLocationPath.Text + "\lock", OutputTxt.Text)
+            IO.File.WriteAllText(tempLocationPath.Text + "\InputVideo", InputTxt.Text)
             Dim StartTasks As New Thread(Sub() Part1())
             StartTasks.Start()
         End If
@@ -114,15 +111,13 @@ Public Class Form1
 
     Private Sub Part1()
         Dim PieceSeconds As Long = 0
-        If split_video_file(InputTxt.Text, tempLocationPath.Text) Then
-            If extract_audio(InputTxt.Text, My.Settings.AudioBitrate, tempLocationPath.Text) Then
-                Part2()
-            End If
+        If extract_audio(InputTxt.Text, My.Settings.AudioBitrate, tempLocationPath.Text) Then
+            Part2()
         End If
     End Sub
 
     Private Sub Part2()
-        Run_svtav1(tempLocationPath.Text + "\y4m-video.y4m", tempLocationPath.Text + "\ivf-video.ivf")
+        Run_svtav1(IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo"), tempLocationPath.Text + "\ivf-video.ivf")
         merge_audio_video(OutputTxt.Text, tempLocationPath.Text)
         If RemoveTempFiles.Checked Then clean_temp_folder(tempLocationPath.Text) Else IO.File.Delete(tempLocationPath.Text + "\lock")
         StartBtn.BeginInvoke(Sub()
@@ -150,6 +145,7 @@ Public Class Form1
     End Sub
     Private Function Run_svtav1(Input_File As String, Output_File As String)
         UpdateLog("Encoding Video")
+        Dim InputPipe As New IO.Pipes.NamedPipeServerStream("in.y4m", IO.Pipes.PipeDirection.Out, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.Asynchronous, PipeBuffer, 0)
         Using svtav1Process As New Process()
             svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
             Dim VideoBitrateString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
@@ -157,7 +153,7 @@ Public Class Form1
             If My.Settings.HME0 Then VideoBitrateString += " -hme-l0 1 " Else VideoBitrateString += " -hme-l0 0 "
             If My.Settings.HME1 Then VideoBitrateString += " -hme-l1 1 " Else VideoBitrateString += " -hme-l1 0 "
             If My.Settings.HME2 Then VideoBitrateString += " -hme-l2 1 " Else VideoBitrateString += " -hme-l2 0 "
-            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -i """ + Input_File + """ -b """ + Output_File + """"
+            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -i \\.\pipe\in.y4m -b """ + Output_File + """"
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
             svtav1Process.StartInfo.RedirectStandardError = True
@@ -176,14 +172,39 @@ Public Class Form1
             svtav1Process.Start()
             svtav1Process.BeginOutputReadLine()
             svtav1Process.BeginErrorReadLine()
+            WriteByteAsync(InputPipe, Input_File)
             svtav1Process.WaitForExit()
             UpdateLog("Video encoding complete.")
-            If Not Exiting Then
-                IO.File.Delete(Input_File)
-            End If
         End Using
         Return True
     End Function
+    Private Async Sub WriteByteAsync(InputPipe As IO.Pipes.NamedPipeServerStream, Input As String)
+        Dim OutputPipe As New IO.Pipes.NamedPipeServerStream(IO.Path.GetFileNameWithoutExtension(Input) + "-out.y4m", IO.Pipes.PipeDirection.In, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.WriteThrough, 0, PipeBuffer)
+        Dim ffmpegProcessInfo As New ProcessStartInfo
+        Dim ffmpegProcess As Process
+        ffmpegProcessInfo.FileName = "ffmpeg.exe"
+        ffmpegProcessInfo.Arguments = "-i """ + Input + """ ""\\.\pipe\" + IO.Path.GetFileNameWithoutExtension(Input) + "-out.y4m"" -y"
+        ffmpegProcessInfo.CreateNoWindow = True
+        ffmpegProcessInfo.RedirectStandardInput = True
+        ffmpegProcessInfo.RedirectStandardOutput = True
+        ffmpegProcessInfo.UseShellExecute = False
+        ffmpegProcess = Process.Start(ffmpegProcessInfo)
+        Dim lastRead As Integer
+        OutputPipe.WaitForConnection()
+        InputPipe.WaitForConnection()
+        Dim buffer As Byte() = New Byte(PipeBuffer) {}
+        Do
+            Try
+                lastRead = OutputPipe.Read(buffer, 0, PipeBuffer)
+                Await InputPipe.WriteAsync(buffer, 0, lastRead)
+                InputPipe.Flush()
+            Catch
+            End Try
+        Loop While lastRead > 0
+        OutputPipe.Dispose()
+        ffmpegProcess.WaitForExit()
+        InputPipe.Dispose()
+    End Sub
     Private Function split_video_file(input As String, tempFolder As String)
         Dim ffmpegProcessInfo As New ProcessStartInfo
         Dim ffmpegProcess As Process
@@ -200,11 +221,10 @@ Public Class Form1
     End Function
     Private Function clean_temp_folder(tempFolder As String)
         For Each File As String In IO.Directory.GetFiles(tempFolder)
-            If IO.Path.GetExtension(File) = ".y4m" Or IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "opus-audio.opus" Then
-                My.Computer.FileSystem.DeleteFile(File)
+            If IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "opus-audio.opus" Or IO.Path.GetFileName(File) = "lock" Or IO.Path.GetFileName(File) = "InputVideo" Then
+                IO.File.Delete(File)
             End If
         Next
-        My.Computer.FileSystem.DeleteFile(tempFolder + "\lock")
         Return True
     End Function
     Private Function merge_audio_video(output As String, tempFolder As String)
@@ -347,16 +367,22 @@ Public Class Form1
 
 
     Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
-        Exiting = True
         While True
             Try
                 For Each SvtAV1EncApp_proc In Process.GetProcessesByName("SvtAV1EncApp")
                     SvtAV1EncApp_proc.Kill()
                 Next
+                For Each ffmpeg_proc In Process.GetProcessesByName("ffmpeg")
+                    ffmpeg_proc.Kill()
+                Next
             Catch
             End Try
-            Dim Processes As Array = Process.GetProcessesByName("SvtAV1EncApp")
-            If Processes.Length = 0 Then
+            Dim svt_av1_Processes As Array = Process.GetProcessesByName("SvtAV1EncApp")
+            If svt_av1_Processes.Length = 0 Then
+                Exit While
+            End If
+            Dim ffmpeg_Processes As Array = Process.GetProcessesByName("ffmpeg")
+            If ffmpeg_Processes.Length = 0 Then
                 Exit While
             End If
         End While
