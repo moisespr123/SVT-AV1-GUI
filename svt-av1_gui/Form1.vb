@@ -2,7 +2,7 @@
 
 Public Class Form1
     Private GUILoaded As Boolean = False
-    Private Const PipeBuffer As Integer = 1024 * 1024 * 1024
+    Private Const PipeBuffer As Integer = 32768
     Private Sub InputBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputBrowseBtn.Click
         Dim InputBrowser As New OpenFileDialog With {
             .Title = "Browse for a video file",
@@ -32,7 +32,8 @@ Public Class Form1
     Private Sub CheckForLockFile()
         If Not String.IsNullOrWhiteSpace(tempLocationPath.Text) Then
             Dim videoFound As Boolean = False
-            Dim CheckTempFolder As String() = IO.Directory.GetFiles(tempLocationPath.Text)
+            Dim CheckTempFolder As String() = {}
+            If IO.Directory.Exists(tempLocationPath.Text) Then CheckTempFolder = IO.Directory.GetFiles(tempLocationPath.Text)
             If CheckTempFolder.Count > 0 Then
                 If CheckTempFolder.Contains(tempLocationPath.Text + "\lock") And CheckTempFolder.Contains(tempLocationPath.Text + "\InputVideo") Then
                     videoFound = True
@@ -144,8 +145,45 @@ Public Class Form1
         MsgBox("Finished")
     End Sub
     Private Function Run_svtav1(Input_File As String, Output_File As String)
-        UpdateLog("Encoding Video")
+        UpdateLog("Getting Video Info")
         Dim InputPipe As New IO.Pipes.NamedPipeServerStream("in.y4m", IO.Pipes.PipeDirection.Out, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.Asynchronous, PipeBuffer, 0)
+        Dim SourceFrameCount As String = String.Empty
+        Dim SourceWidth As String = String.Empty
+        Dim SourceHeight As String = String.Empty
+        Dim SourceFrameRate As String = String.Empty
+        Using mediainfoProcess As New Process
+            mediainfoProcess.StartInfo.FileName = "mediainfo.exe"
+            mediainfoProcess.StartInfo.Arguments = """" + Input_File + """ -full"
+            mediainfoProcess.StartInfo.CreateNoWindow = True
+            mediainfoProcess.StartInfo.RedirectStandardOutput = True
+            mediainfoProcess.StartInfo.RedirectStandardError = True
+            mediainfoProcess.StartInfo.RedirectStandardInput = True
+            mediainfoProcess.StartInfo.UseShellExecute = False
+            mediainfoProcess.Start()
+            While True
+                If Not mediainfoProcess.StandardOutput.EndOfStream Then
+                    Dim splitted_line As String() = mediainfoProcess.StandardOutput.ReadLine().Split(":")
+                    If splitted_line(0).Contains("Frame count") And SourceFrameCount = String.Empty Then
+                        SourceFrameCount = splitted_line(1).Trim()
+                        UpdateLog("Video Frame Count: " + SourceFrameCount)
+                    ElseIf splitted_line(0).Contains("Frame rate") And SourceFrameRate = String.Empty Then
+                        If Not splitted_line(1).Contains("FPS") Then
+                            SourceFrameRate = splitted_line(1).Trim()
+                            UpdateLog("Frame Rate: " + SourceFrameRate)
+                        End If
+                    ElseIf splitted_line(0).Contains("Sampled_Width") And SourceWidth = String.Empty Then
+                        SourceWidth = splitted_line(1).Trim()
+                        UpdateLog("Video Width: " + SourceWidth)
+                    ElseIf splitted_line(0).Contains("Sampled_Height") And SourceHeight = String.Empty Then
+                        SourceHeight = splitted_line(1).Trim()
+                        UpdateLog("Video Height: " + SourceHeight)
+                    End If
+                Else
+                    Exit While
+                End If
+            End While
+        End Using
+        UpdateLog("Encoding Video")
         Using svtav1Process As New Process()
             svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
             Dim VideoBitrateString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
@@ -153,7 +191,7 @@ Public Class Form1
             If My.Settings.HME0 Then VideoBitrateString += " -hme-l0 1 " Else VideoBitrateString += " -hme-l0 0 "
             If My.Settings.HME1 Then VideoBitrateString += " -hme-l1 1 " Else VideoBitrateString += " -hme-l1 0 "
             If My.Settings.HME2 Then VideoBitrateString += " -hme-l2 1 " Else VideoBitrateString += " -hme-l2 0 "
-            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -i \\.\pipe\in.y4m -b """ + Output_File + """"
+            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -fps " + SourceFrameRate + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
             svtav1Process.StartInfo.RedirectStandardError = True
@@ -179,11 +217,11 @@ Public Class Form1
         Return True
     End Function
     Private Async Sub WriteByteAsync(InputPipe As IO.Pipes.NamedPipeServerStream, Input As String)
-        Dim OutputPipe As New IO.Pipes.NamedPipeServerStream(IO.Path.GetFileNameWithoutExtension(Input) + "-out.y4m", IO.Pipes.PipeDirection.In, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.WriteThrough, 0, PipeBuffer)
+        Dim OutputPipe As New IO.Pipes.NamedPipeServerStream(IO.Path.GetFileNameWithoutExtension(Input) + "-out.yuv", IO.Pipes.PipeDirection.In, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.WriteThrough, 0, PipeBuffer)
         Dim ffmpegProcessInfo As New ProcessStartInfo
         Dim ffmpegProcess As Process
         ffmpegProcessInfo.FileName = "ffmpeg.exe"
-        ffmpegProcessInfo.Arguments = "-i """ + Input + """ ""\\.\pipe\" + IO.Path.GetFileNameWithoutExtension(Input) + "-out.y4m"" -y"
+        ffmpegProcessInfo.Arguments = "-i """ + Input + """ -c:v rawvideo -pix_fmt yuv420p  ""\\.\pipe\" + IO.Path.GetFileNameWithoutExtension(Input) + "-out.yuv"" -y"
         ffmpegProcessInfo.CreateNoWindow = True
         ffmpegProcessInfo.RedirectStandardInput = True
         ffmpegProcessInfo.RedirectStandardOutput = True
@@ -205,20 +243,6 @@ Public Class Form1
         ffmpegProcess.WaitForExit()
         InputPipe.Dispose()
     End Sub
-    Private Function split_video_file(input As String, tempFolder As String)
-        Dim ffmpegProcessInfo As New ProcessStartInfo
-        Dim ffmpegProcess As Process
-        ffmpegProcessInfo.FileName = "ffmpeg.exe"
-        UpdateLog("Encoding input video to Y4M")
-        ffmpegProcessInfo.Arguments = "-i """ + input + """ """ + tempFolder + "/y4m-video.y4m"" -y"
-        ffmpegProcessInfo.CreateNoWindow = True
-        ffmpegProcessInfo.RedirectStandardOutput = False
-        ffmpegProcessInfo.UseShellExecute = False
-        ffmpegProcess = Process.Start(ffmpegProcessInfo)
-        ffmpegProcess.WaitForExit()
-        UpdateLog("Video file splitted")
-        Return True
-    End Function
     Private Function clean_temp_folder(tempFolder As String)
         For Each File As String In IO.Directory.GetFiles(tempFolder)
             If IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "opus-audio.opus" Or IO.Path.GetFileName(File) = "lock" Or IO.Path.GetFileName(File) = "InputVideo" Then
@@ -283,6 +307,8 @@ Public Class Form1
         tempLocationPath.Text = My.Settings.tempFolder
         RemoveTempFiles.Checked = My.Settings.removeTempFiles
         GetFfmpegVersion()
+        CheckSvtAv1()
+        CheckMediaInfo()
         GUILoaded = True
         If Not String.IsNullOrWhiteSpace(tempLocationPath.Text) Then CheckForLockFile()
     End Sub
@@ -315,6 +341,38 @@ Public Class Form1
         Catch ex As Exception
             MessageBox.Show("ffmpeg.exe was not found. Exiting...")
             Process.Start("https://moisescardona.me/downloading-ffmpeg-svt-av1-gui/")
+            Me.Close()
+        End Try
+    End Sub
+
+    Private Sub CheckSvtAv1()
+        Try
+            Dim SvtAv1ProcessInfo As New ProcessStartInfo
+            Dim SvtAv1Process As Process
+            SvtAv1ProcessInfo.FileName = "SvtAv1EncApp.exe"
+            SvtAv1ProcessInfo.CreateNoWindow = True
+            SvtAv1ProcessInfo.RedirectStandardError = True
+            SvtAv1ProcessInfo.UseShellExecute = False
+            SvtAv1Process = Process.Start(SvtAv1ProcessInfo)
+            SvtAv1Process.WaitForExit()
+        Catch ex As Exception
+            MessageBox.Show("SvtAv1EncApp.exe was not found. Exiting...")
+            Me.Close()
+        End Try
+    End Sub
+
+    Private Sub CheckMediaInfo()
+        Try
+            Dim MediaInfoProcessInfo As New ProcessStartInfo
+            Dim MediaInfoProcess As Process
+            MediaInfoProcessInfo.FileName = "mediainfo.exe"
+            MediaInfoProcessInfo.CreateNoWindow = True
+            MediaInfoProcessInfo.RedirectStandardError = True
+            MediaInfoProcessInfo.UseShellExecute = False
+            MediaInfoProcess = Process.Start(MediaInfoProcessInfo)
+            MediaInfoProcess.WaitForExit()
+        Catch ex As Exception
+            MessageBox.Show("SvtAv1EncApp.exe was not found. Exiting...")
             Me.Close()
         End Try
     End Sub
