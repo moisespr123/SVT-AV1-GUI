@@ -12,10 +12,10 @@ Written in Visual Basic .NET using Visual Studio 2019.
 
 * You need ffmpeg as found here: https://ffmpeg.zeranoe.com/builds/. Use the nightly builds. [Instructions here.](https://moisescardona.me/downloading-ffmpeg-svt-av1-gui/)
 
-Builds comes with opusenc and SVT-AV1 bundled, but not ffmpeg due to licensing restrictions.
+Builds comes mediainfo and SVT-AV1 bundled, but not ffmpeg due to licensing restrictions.
 
 # Updated components builds:
 
-Ocasionally, SVT-AV1 and opusenc gets updated. You can download the latest version of SVT-AV1 GUI with these updated tools included here: [https://moisescardona.me/svt-av1-gui](https://moisescardona.me/svt-av1-gui)
+Ocasionally, SVT-AV1 and mediainfo gets updated. You can download the latest version of SVT-AV1 GUI with these updated tools included here: [https://moisescardona.me/svt-av1-gui](https://moisescardona.me/svt-av1-gui)
 
 Enjoy!
