@@ -151,6 +151,8 @@ Public Class Form1
         Dim SourceWidth As String = String.Empty
         Dim SourceHeight As String = String.Empty
         Dim SourceFrameRate As String = String.Empty
+        Dim SourceFrameNum As String = String.Empty
+        Dim SourceFrameDen As String = String.Empty
         Using mediainfoProcess As New Process
             mediainfoProcess.StartInfo.FileName = "mediainfo.exe"
             mediainfoProcess.StartInfo.Arguments = """" + Input_File + """ -full"
@@ -171,6 +173,12 @@ Public Class Form1
                             SourceFrameRate = splitted_line(1).Trim()
                             UpdateLog("Frame Rate: " + SourceFrameRate)
                         End If
+                    ElseIf splitted_line(0).Contains("FrameRate_Num") And SourceFrameNum = String.Empty Then
+                        SourceFrameNum = splitted_line(1).Trim()
+                        UpdateLog("Frame Rate Numerator: " + SourceFrameNum)
+                    ElseIf splitted_line(0).Contains("FrameRate_Den") And SourceFrameDen = String.Empty Then
+                        SourceFrameDen = splitted_line(1).Trim()
+                        UpdateLog("Frame Rate Denominator: " + SourceFrameDen)
                     ElseIf splitted_line(0).Contains("Sampled_Width") And SourceWidth = String.Empty Then
                         SourceWidth = splitted_line(1).Trim()
                         UpdateLog("Video Width: " + SourceWidth)
@@ -191,7 +199,12 @@ Public Class Form1
             If My.Settings.HME0 Then VideoBitrateString += " -hme-l0 1 " Else VideoBitrateString += " -hme-l0 0 "
             If My.Settings.HME1 Then VideoBitrateString += " -hme-l1 1 " Else VideoBitrateString += " -hme-l1 0 "
             If My.Settings.HME2 Then VideoBitrateString += " -hme-l2 1 " Else VideoBitrateString += " -hme-l2 0 "
-            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -fps " + SourceFrameRate + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
+            If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty Then
+                VideoBitrateString += " -fps " + SourceFrameRate
+            Else
+                VideoBitrateString += " -fps-num " + SourceFrameNum + " -fps-denom " + SourceFrameDen
+            End If
+            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
             svtav1Process.StartInfo.RedirectStandardError = True
@@ -232,12 +245,9 @@ Public Class Form1
         InputPipe.WaitForConnection()
         Dim buffer As Byte() = New Byte(PipeBuffer) {}
         Do
-            Try
-                lastRead = OutputPipe.Read(buffer, 0, PipeBuffer)
-                Await InputPipe.WriteAsync(buffer, 0, lastRead)
-                InputPipe.Flush()
-            Catch
-            End Try
+            lastRead = OutputPipe.Read(buffer, 0, PipeBuffer)
+            Await InputPipe.WriteAsync(buffer, 0, lastRead)
+            InputPipe.Flush()
         Loop While lastRead > 0
         OutputPipe.Dispose()
         ffmpegProcess.WaitForExit()
