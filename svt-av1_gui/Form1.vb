@@ -245,9 +245,12 @@ Public Class Form1
         InputPipe.WaitForConnection()
         Dim buffer As Byte() = New Byte(PipeBuffer) {}
         Do
-            lastRead = OutputPipe.Read(buffer, 0, PipeBuffer)
-            Await InputPipe.WriteAsync(buffer, 0, lastRead)
-            InputPipe.Flush()
+            Try
+                lastRead = OutputPipe.Read(buffer, 0, PipeBuffer)
+                Await InputPipe.WriteAsync(buffer, 0, lastRead)
+                InputPipe.Flush()
+            Catch
+            End Try
         Loop While lastRead > 0
         OutputPipe.Dispose()
         ffmpegProcess.WaitForExit()
