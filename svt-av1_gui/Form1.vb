@@ -186,10 +186,24 @@ Public Class Form1
                         SourceHeight = splitted_line(1).Trim()
                         UpdateLog("Video Height: " + SourceHeight)
                     End If
+                    If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty Then
+                        If splitted_line(0).Contains("Maximum frame rate") Then
+                            If Not splitted_line(1).Contains("FPS") Then
+                                SourceFrameRate = splitted_line(1).Trim()
+                                UpdateLog("Using maximum frame Rate: " + SourceFrameRate)
+                            End If
+                        End If
+                    End If
                 Else
                     Exit While
                 End If
             End While
+            If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty And Not Convert.ToDouble(SourceFrameRate) Mod 1 = 0 Then
+                SourceFrameNum = Convert.ToString(Convert.ToDouble(SourceFrameRate) * 1000)
+                SourceFrameDen = "1000"
+                UpdateLog("Frame Rate Numerator: " + SourceFrameNum)
+                UpdateLog("Frame Rate Denominator: " + SourceFrameDen)
+            End If
         End Using
         UpdateLog("Encoding Video")
         Using svtav1Process As New Process()
