@@ -59,6 +59,8 @@ Partial Class Form1
         Me.PauseResumeButton = New System.Windows.Forms.Button()
         Me.ClearLogBtn = New System.Windows.Forms.Button()
         Me.SaveLogBtn = New System.Windows.Forms.Button()
+        Me.TwoPassEncoding = New System.Windows.Forms.CheckBox()
+        Me.NoPipes = New System.Windows.Forms.CheckBox()
         Me.GroupBox1.SuspendLayout()
         CType(Me.columns, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.rows, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -163,6 +165,7 @@ Partial Class Form1
         Me.GroupBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.GroupBox1.Controls.Add(Me.TwoPassEncoding)
         Me.GroupBox1.Controls.Add(Me.AdditionalArguments)
         Me.GroupBox1.Controls.Add(Me.Label4)
         Me.GroupBox1.Controls.Add(Me.columns)
@@ -409,6 +412,7 @@ Partial Class Form1
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.NoPipes)
         Me.SplitContainer1.Panel1.Controls.Add(Me.ffmpegVersionLabel)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Label1)
         Me.SplitContainer1.Panel1.Controls.Add(Me.GroupBox1)
@@ -477,6 +481,26 @@ Partial Class Form1
         Me.SaveLogBtn.Text = "Save Log"
         Me.SaveLogBtn.UseVisualStyleBackColor = True
         '
+        'TwoPassEncoding
+        '
+        Me.TwoPassEncoding.AutoSize = True
+        Me.TwoPassEncoding.Location = New System.Drawing.Point(247, 58)
+        Me.TwoPassEncoding.Name = "TwoPassEncoding"
+        Me.TwoPassEncoding.Size = New System.Drawing.Size(58, 17)
+        Me.TwoPassEncoding.TabIndex = 46
+        Me.TwoPassEncoding.Text = "2-Pass"
+        Me.TwoPassEncoding.UseVisualStyleBackColor = True
+        '
+        'NoPipes
+        '
+        Me.NoPipes.AutoSize = True
+        Me.NoPipes.Location = New System.Drawing.Point(151, 135)
+        Me.NoPipes.Name = "NoPipes"
+        Me.NoPipes.Size = New System.Drawing.Size(107, 17)
+        Me.NoPipes.TabIndex = 47
+        Me.NoPipes.Text = "Do not use Pipes"
+        Me.NoPipes.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AllowDrop = True
@@ -540,4 +564,6 @@ Partial Class Form1
     Friend WithEvents Label10 As Label
     Friend WithEvents AdditionalArguments As TextBox
     Friend WithEvents Label4 As Label
+    Friend WithEvents TwoPassEncoding As CheckBox
+    Friend WithEvents NoPipes As CheckBox
 End Class

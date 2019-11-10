@@ -72,6 +72,8 @@ Public Class Form1
         tempLocationPath.Enabled = False
         BrowseTempLocation.Enabled = False
         SaveLogBtn.Enabled = False
+        TwoPassEncoding.Enabled = False
+        NoPipes.Enabled = False
         PauseResumeButton.Enabled = True
     End Sub
     Private Sub ResumePreviousEncodeSession()
@@ -112,13 +114,22 @@ Public Class Form1
 
     Private Sub Part1()
         Dim PieceSeconds As Long = 0
+        If My.Settings.NoPipes Then
+            If Not extract_video(My.Settings.tempFolder, IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo")) Then
+                Exit Sub
+            End If
+        End If
         If extract_audio(InputTxt.Text, My.Settings.AudioBitrate, tempLocationPath.Text) Then
             Part2()
         End If
     End Sub
 
     Private Sub Part2()
-        Run_svtav1(IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo"), tempLocationPath.Text + "\ivf-video.ivf")
+        If My.Settings.NoPipes Then
+            Run_svtav1_no_pipe(My.Settings.tempFolder, tempLocationPath.Text + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
+        Else
+            Run_svtav1(IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo"), tempLocationPath.Text + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
+        End If
         merge_audio_video(OutputTxt.Text, tempLocationPath.Text)
         If RemoveTempFiles.Checked Then clean_temp_folder(tempLocationPath.Text) Else IO.File.Delete(tempLocationPath.Text + "\lock")
         StartBtn.BeginInvoke(Sub()
@@ -141,10 +152,12 @@ Public Class Form1
                                  OutputBrowseBtn.Enabled = True
                                  SaveLogBtn.Enabled = True
                                  PauseResumeButton.Enabled = False
+                                 TwoPassEncoding.Enabled = True
+                                 NoPipes.Enabled = True
                              End Sub)
         MsgBox("Finished")
     End Sub
-    Private Function Run_svtav1(Input_File As String, Output_File As String)
+    Private Function Run_svtav1(Input_File As String, Output_File As String, SecondPassEnabled As Boolean, Optional SecondPass As Boolean = False)
         UpdateLog("Getting Video Info")
         Dim InputPipe As New IO.Pipes.NamedPipeServerStream("in.y4m", IO.Pipes.PipeDirection.Out, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.Asynchronous, PipeBuffer, 0)
         Dim SourceFrameCount As String = String.Empty
@@ -208,17 +221,29 @@ Public Class Form1
         UpdateLog("Encoding Video")
         Using svtav1Process As New Process()
             svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
-            Dim VideoBitrateString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
-            If My.Settings.HME Then VideoBitrateString += " -hme 1 " Else VideoBitrateString += " -hme 0 "
-            If My.Settings.HME0 Then VideoBitrateString += " -hme-l0 1 " Else VideoBitrateString += " -hme-l0 0 "
-            If My.Settings.HME1 Then VideoBitrateString += " -hme-l1 1 " Else VideoBitrateString += " -hme-l1 0 "
-            If My.Settings.HME2 Then VideoBitrateString += " -hme-l2 1 " Else VideoBitrateString += " -hme-l2 0 "
+            Dim SVTAV1CommandLineString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
+            If My.Settings.HME Then SVTAV1CommandLineString += " -hme 1 " Else SVTAV1CommandLineString += " -hme 0 "
+            If My.Settings.HME0 Then SVTAV1CommandLineString += " -hme-l0 1 " Else SVTAV1CommandLineString += " -hme-l0 0 "
+            If My.Settings.HME1 Then SVTAV1CommandLineString += " -hme-l1 1 " Else SVTAV1CommandLineString += " -hme-l1 0 "
+            If My.Settings.HME2 Then SVTAV1CommandLineString += " -hme-l2 1 " Else SVTAV1CommandLineString += " -hme-l2 0 "
             If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty Then
-                VideoBitrateString += " -fps " + SourceFrameRate
+                SVTAV1CommandLineString += " -fps " + SourceFrameRate
             Else
-                VideoBitrateString += " -fps-num " + SourceFrameNum + " -fps-denom " + SourceFrameDen
+                SVTAV1CommandLineString += " -fps-num " + SourceFrameNum + " -fps-denom " + SourceFrameDen
             End If
-            svtav1Process.StartInfo.Arguments = VideoBitrateString + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
+            If SecondPassEnabled Then
+                If Not SecondPass Then
+                    UpdateLog("Performing First Pass Encoding")
+                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -output-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"""
+                Else
+                    UpdateLog("Performing Second Pass Encoding")
+                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + "" + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
+                End If
+            Else
+                SVTAV1CommandLineString += " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
+            End If
+            UpdateLog(SVTAV1CommandLineString)
+            svtav1Process.StartInfo.Arguments = SVTAV1CommandLineString
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
             svtav1Process.StartInfo.RedirectStandardError = True
@@ -239,7 +264,11 @@ Public Class Form1
             svtav1Process.BeginErrorReadLine()
             WriteByteAsync(InputPipe, Input_File)
             svtav1Process.WaitForExit()
-            UpdateLog("Video encoding complete.")
+            If SecondPassEnabled And Not SecondPass Then
+                Run_svtav1(Input_File, Output_File, SecondPassEnabled, True)
+            Else
+                UpdateLog("Video encoding complete.")
+            End If
         End Using
         Return True
     End Function
@@ -248,7 +277,7 @@ Public Class Form1
         Dim ffmpegProcessInfo As New ProcessStartInfo
         Dim ffmpegProcess As Process
         ffmpegProcessInfo.FileName = "ffmpeg.exe"
-        ffmpegProcessInfo.Arguments = "-i """ + Input + """ -c:v rawvideo -pix_fmt yuv420p  ""\\.\pipe\" + IO.Path.GetFileNameWithoutExtension(Input) + "-out.yuv"" -y"
+        ffmpegProcessInfo.Arguments = "-i """ + Input + """ -c:v rawvideo -pix_fmt yuv420p ""\\.\pipe\" + IO.Path.GetFileNameWithoutExtension(Input) + "-out.yuv"" -y"
         ffmpegProcessInfo.CreateNoWindow = True
         ffmpegProcessInfo.RedirectStandardInput = True
         ffmpegProcessInfo.RedirectStandardOutput = True
@@ -270,9 +299,74 @@ Public Class Form1
         ffmpegProcess.WaitForExit()
         InputPipe.Dispose()
     End Sub
-    Private Function clean_temp_folder(tempFolder As String)
+    Private Function Run_svtav1_no_pipe(Temp_Location As String, Output_File As String, SecondPassEnabled As Boolean, Optional SecondPass As Boolean = False)
+        UpdateLog("Getting Video Info")
+        UpdateLog("Encoding Video")
+        Using svtav1Process As New Process()
+            svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
+            Dim SVTAV1CommandLineString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
+            If My.Settings.HME Then SVTAV1CommandLineString += " -hme 1 " Else SVTAV1CommandLineString += " -hme 0 "
+            If My.Settings.HME0 Then SVTAV1CommandLineString += " -hme-l0 1 " Else SVTAV1CommandLineString += " -hme-l0 0 "
+            If My.Settings.HME1 Then SVTAV1CommandLineString += " -hme-l1 1 " Else SVTAV1CommandLineString += " -hme-l1 0 "
+            If My.Settings.HME2 Then SVTAV1CommandLineString += " -hme-l2 1 " Else SVTAV1CommandLineString += " -hme-l2 0 "
+            If SecondPassEnabled Then
+                If Not SecondPass Then
+                    UpdateLog("Performing First Pass Encoding")
+                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -i """ + Temp_Location + "/y4m-video.y4m"" -output-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"""
+                Else
+                    UpdateLog("Performing Second Pass Encoding")
+                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + "" + My.Settings.AdditionalArguments + " -i """ + Temp_Location + "/y4m-video.y4m"" -input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
+                End If
+            Else
+                SVTAV1CommandLineString += " " + My.Settings.AdditionalArguments + " -i """ + Temp_Location + "/y4m-video.y4m"" -b """ + Output_File + """"
+            End If
+            UpdateLog(SVTAV1CommandLineString)
+            svtav1Process.StartInfo.Arguments = SVTAV1CommandLineString
+            svtav1Process.StartInfo.CreateNoWindow = True
+            svtav1Process.StartInfo.RedirectStandardOutput = True
+            svtav1Process.StartInfo.RedirectStandardError = True
+            svtav1Process.StartInfo.RedirectStandardInput = True
+            svtav1Process.StartInfo.UseShellExecute = False
+            AddHandler svtav1Process.OutputDataReceived, New DataReceivedEventHandler(Sub(sender, e)
+                                                                                          If Not e.Data = Nothing Then
+                                                                                              UpdateLog(e.Data, IO.Path.GetFileName(Temp_Location + "/y4m-video.y4m"))
+                                                                                          End If
+                                                                                      End Sub)
+            AddHandler svtav1Process.ErrorDataReceived, New DataReceivedEventHandler(Sub(sender, e)
+                                                                                         If Not e.Data = Nothing Then
+                                                                                             UpdateLog(e.Data, IO.Path.GetFileName(Temp_Location + "/y4m-video.y4m"))
+                                                                                         End If
+                                                                                     End Sub)
+            svtav1Process.Start()
+            svtav1Process.BeginOutputReadLine()
+            svtav1Process.BeginErrorReadLine()
+            svtav1Process.WaitForExit()
+            If SecondPassEnabled And Not SecondPass Then
+                Run_svtav1_no_pipe(Temp_Location, Output_File, SecondPassEnabled, True)
+            Else
+                UpdateLog("Video encoding complete.")
+            End If
+        End Using
+        Return True
+    End Function
+    Private Function extract_video(TempLocation As String, Input As String) As Boolean
+        UpdateLog("Encoding video to y4m")
+        Dim ffmpegProcessInfo As New ProcessStartInfo
+        Dim ffmpegProcess As Process
+        ffmpegProcessInfo.FileName = "ffmpeg.exe"
+        ffmpegProcessInfo.Arguments = "-i """ + Input + """ """ + TempLocation + "/y4m-video.y4m"" -y"
+        ffmpegProcessInfo.CreateNoWindow = True
+        ffmpegProcessInfo.RedirectStandardInput = True
+        ffmpegProcessInfo.RedirectStandardOutput = True
+        ffmpegProcessInfo.UseShellExecute = False
+        ffmpegProcess = Process.Start(ffmpegProcessInfo)
+        ffmpegProcess.WaitForExit()
+        UpdateLog("y4m encoding complete.")
+        Return True
+    End Function
+    Private Function clean_temp_folder(tempFolder As String) As Boolean
         For Each File As String In IO.Directory.GetFiles(tempFolder)
-            If IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "opus-audio.opus" Or IO.Path.GetFileName(File) = "lock" Or IO.Path.GetFileName(File) = "InputVideo" Then
+            If IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "y4m-video.y4m" Or IO.Path.GetFileName(File) = "opus-audio.opus" Or IO.Path.GetFileName(File) = "lock" Or IO.Path.GetFileName(File) = "InputVideo" Or IO.Path.GetFileName(File) = "OutputStatFile" Then
                 IO.File.Delete(File)
             End If
         Next
@@ -332,6 +426,8 @@ Public Class Form1
         AdditionalArguments.Text = My.Settings.AdditionalArguments
         audioBitrate.Value = My.Settings.AudioBitrate
         tempLocationPath.Text = My.Settings.tempFolder
+        TwoPassEncoding.Checked = My.Settings.TwoPassEncoding
+        NoPipes.Checked = My.Settings.NoPipes
         RemoveTempFiles.Checked = My.Settings.removeTempFiles
         GetFfmpegVersion()
         CheckSvtAv1()
@@ -577,5 +673,19 @@ Public Class Form1
 
     Private Sub InputTxt_TextChanged(sender As Object, e As EventArgs) Handles InputTxt.TextChanged
         OutputTxt.Text = IO.Path.ChangeExtension(InputTxt.Text, ".webm")
+    End Sub
+
+    Private Sub TwoPassEncoding_CheckedChanged(sender As Object, e As EventArgs) Handles TwoPassEncoding.CheckedChanged
+        If GUILoaded Then
+            My.Settings.TwoPassEncoding = TwoPassEncoding.Checked
+            My.Settings.Save()
+        End If
+    End Sub
+
+    Private Sub NoPipes_CheckedChanged(sender As Object, e As EventArgs) Handles NoPipes.CheckedChanged
+        If GUILoaded Then
+            My.Settings.NoPipes = NoPipes.Checked
+            My.Settings.Save()
+        End If
     End Sub
 End Class
