@@ -3,7 +3,7 @@
 Public Class Form1
     Private GUILoaded As Boolean = False
     Private Const PipeBuffer As Integer = 32768
-    Private Sub InputBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputBrowseBtn.Click
+    Private Sub InputBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputFileBrowseBtn.Click
         Dim InputBrowser As New OpenFileDialog With {
             .Title = "Browse for a video file",
             .FileName = IO.Path.GetFileName(InputTxt.Text),
@@ -17,7 +17,7 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub OutputBrowseBtn_Click(sender As Object, e As EventArgs) Handles OutputBrowseBtn.Click
+    Private Sub OutputBrowseBtn_Click(sender As Object, e As EventArgs) Handles OutputFileBrowseBtn.Click
         Dim OutputBrowser As New SaveFileDialog With {
             .Title = "Save Video File",
             .FileName = IO.Path.GetFileName(OutputTxt.Text),
@@ -57,8 +57,8 @@ Public Class Form1
         StartBtn.Enabled = False
         InputTxt.Enabled = False
         OutputTxt.Enabled = False
-        InputBrowseBtn.Enabled = False
-        OutputBrowseBtn.Enabled = False
+        InputFileBrowseBtn.Enabled = False
+        OutputFileBrowseBtn.Enabled = False
         audioBitrate.Enabled = False
         quantizer.Enabled = False
         rows.Enabled = False
@@ -78,7 +78,7 @@ Public Class Form1
     End Sub
     Private Sub ResumePreviousEncodeSession()
         DisableElements()
-        Dim StartTasks As New Thread(Sub() Part2())
+        Dim StartTasks As New Thread(Sub() Part2(IO.File.ReadAllText(My.Settings.tempFolder + "\InputVideo")))
         StartTasks.Start()
     End Sub
     Private Sub StartBtn_Click(sender As Object, e As EventArgs) Handles StartBtn.Click
@@ -86,6 +86,8 @@ Public Class Form1
             MsgBox("No input file has been specified. Please enter or browse for an input video file")
         ElseIf String.IsNullOrWhiteSpace(OutputTxt.Text) Then
             MsgBox("No output file has been specified. Please enter or browse for an output video file")
+        ElseIf IO.File.Exists(OutputTxt.Text) Then
+            MsgBox("An output file with the same name exists. Please change the output video file name.")
         ElseIf String.IsNullOrWhiteSpace(tempLocationPath.Text) Then
             MsgBox("Temporary folder has not been specified. Please enter or browse for a temporary path")
         Else
@@ -102,36 +104,60 @@ Public Class Form1
                 Next
             End If
             DisableElements()
-            If Not IO.Path.GetExtension(OutputTxt.Text) = ".webm" And Not IO.Path.GetExtension(OutputTxt.Text) = ".mkv" Then
-                OutputTxt.Text = OutputTxt.Text = IO.Path.ChangeExtension(OutputTxt.Text, ".webm")
+            If Not IO.Directory.Exists(InputTxt.Text) Then
+                If Not IO.Path.GetExtension(OutputTxt.Text) = ".webm" And Not IO.Path.GetExtension(OutputTxt.Text) = ".mkv" Then
+                    OutputTxt.Text = OutputTxt.Text = IO.Path.ChangeExtension(OutputTxt.Text, ".webm")
+                End If
+                IO.File.WriteAllText(tempLocationPath.Text + "\lock", OutputTxt.Text)
+                IO.File.WriteAllText(tempLocationPath.Text + "\InputVideo", InputTxt.Text)
+                Dim StartTasks As New Thread(Sub() Part1(InputTxt.Text))
+                StartTasks.Start()
+            Else
+                If Not IO.Directory.Exists(OutputTxt.Text) Then IO.Directory.CreateDirectory(OutputTxt.Text)
+                Dim StartTasks As New Thread(Sub() BatchProcessing(IO.Directory.GetFiles(InputTxt.Text), OutputTxt.Text, tempLocationPath.Text))
+                StartTasks.Start()
             End If
-            IO.File.WriteAllText(tempLocationPath.Text + "\lock", OutputTxt.Text)
-            IO.File.WriteAllText(tempLocationPath.Text + "\InputVideo", InputTxt.Text)
-            Dim StartTasks As New Thread(Sub() Part1())
-            StartTasks.Start()
         End If
     End Sub
 
-    Private Sub Part1()
-        Dim PieceSeconds As Long = 0
+    Private Sub BatchProcessing(Files As String(), OutputPath As String, tempLocation As String)
+        For Each File In Files
+            Dim OutputFileName As String = OutputPath + "\" + IO.Path.GetFileNameWithoutExtension(File) + ".webm"
+            IO.File.WriteAllText(tempLocation + "\lock", OutputFileName)
+            IO.File.WriteAllText(tempLocation + "\InputVideo", File)
+            If Not IO.File.Exists(OutputFileName) Then
+                Part1(File, True)
+            Else
+                clean_temp_folder(tempLocation)
+                UpdateLog(OutputFileName + " exist. Skipping.")
+            End If
+        Next
+        Part3()
+    End Sub
+    Private Sub Part1(InputFile As String, Optional BatchProcessing As Boolean = False)
         If My.Settings.NoPipes Then
-            If Not extract_video(My.Settings.tempFolder, IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo")) Then
+            If Not extract_video(My.Settings.tempFolder, InputFile) Then
                 Exit Sub
             End If
         End If
-        If extract_audio(InputTxt.Text, My.Settings.AudioBitrate, tempLocationPath.Text) Then
-            Part2()
+        If extract_audio(InputFile, My.Settings.AudioBitrate, My.Settings.tempFolder) Then
+            Part2(InputFile, BatchProcessing)
         End If
     End Sub
 
-    Private Sub Part2()
+    Private Sub Part2(InputFile As String, Optional BatchProcessing As Boolean = False)
         If My.Settings.NoPipes Then
-            Run_svtav1_no_pipe(My.Settings.tempFolder, tempLocationPath.Text + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
+            Run_svtav1_no_pipe(My.Settings.tempFolder, My.Settings.tempFolder + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
         Else
-            Run_svtav1(IO.File.ReadAllText(tempLocationPath.Text + "/InputVideo"), tempLocationPath.Text + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
+            Run_svtav1(InputFile, My.Settings.tempFolder + "\ivf-video.ivf", My.Settings.TwoPassEncoding)
         End If
-        merge_audio_video(OutputTxt.Text, tempLocationPath.Text)
-        If RemoveTempFiles.Checked Then clean_temp_folder(tempLocationPath.Text) Else IO.File.Delete(tempLocationPath.Text + "\lock")
+        merge_audio_video(IO.File.ReadAllText(My.Settings.tempFolder + "\lock"), My.Settings.tempFolder)
+        If RemoveTempFiles.Checked Or BatchProcessing Then clean_temp_folder(My.Settings.tempFolder) Else IO.File.Delete(My.Settings.tempFolder + "\lock")
+        If Not BatchProcessing Then
+            Part3()
+        End If
+    End Sub
+    Private Function Part3()
         StartBtn.BeginInvoke(Sub()
                                  StartBtn.Enabled = True
                                  audioBitrate.Enabled = True
@@ -148,15 +174,15 @@ Public Class Form1
                                  BrowseTempLocation.Enabled = True
                                  OutputTxt.Enabled = True
                                  InputTxt.Enabled = True
-                                 InputBrowseBtn.Enabled = True
-                                 OutputBrowseBtn.Enabled = True
+                                 InputFileBrowseBtn.Enabled = True
+                                 OutputFileBrowseBtn.Enabled = True
                                  SaveLogBtn.Enabled = True
                                  PauseResumeButton.Enabled = False
                                  TwoPassEncoding.Enabled = True
                                  NoPipes.Enabled = True
                              End Sub)
         MsgBox("Finished")
-    End Sub
+    End Function
     Private Function Run_svtav1(Input_File As String, Output_File As String, SecondPassEnabled As Boolean, Optional SecondPass As Boolean = False)
         UpdateLog("Getting Video Info")
         Dim InputPipe As New IO.Pipes.NamedPipeServerStream("in.y4m", IO.Pipes.PipeDirection.Out, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.Asynchronous, PipeBuffer, 0)
@@ -672,7 +698,13 @@ Public Class Form1
     End Sub
 
     Private Sub InputTxt_TextChanged(sender As Object, e As EventArgs) Handles InputTxt.TextChanged
-        OutputTxt.Text = IO.Path.ChangeExtension(InputTxt.Text, ".webm")
+        If Not IO.Directory.Exists(InputTxt.Text) Then
+            OutputTxt.Text = IO.Path.ChangeExtension(InputTxt.Text, ".webm")
+            RemoveTempFiles.Enabled = True
+        Else
+            OutputTxt.Text = String.Empty
+            RemoveTempFiles.Enabled = False
+        End If
     End Sub
 
     Private Sub TwoPassEncoding_CheckedChanged(sender As Object, e As EventArgs) Handles TwoPassEncoding.CheckedChanged
@@ -686,6 +718,26 @@ Public Class Form1
         If GUILoaded Then
             My.Settings.NoPipes = NoPipes.Checked
             My.Settings.Save()
+        End If
+    End Sub
+
+    Private Sub InputFolderBrowseBtn_Click(sender As Object, e As EventArgs) Handles InputFolderBrowseBtn.Click
+        Dim InputBrowser As New FolderBrowserDialog With {
+           .ShowNewFolderButton = False}
+        If Not String.IsNullOrEmpty(InputTxt.Text) Then InputBrowser.SelectedPath = IO.Path.GetDirectoryName(InputTxt.Text)
+        Dim OkAction As MsgBoxResult = InputBrowser.ShowDialog
+        If OkAction = MsgBoxResult.Ok Then
+            InputTxt.Text = InputBrowser.SelectedPath
+        End If
+    End Sub
+
+    Private Sub OutputFolderBrowseBtn_Click(sender As Object, e As EventArgs) Handles OutputFolderBrowseBtn.Click
+        Dim OutputBrowser As New FolderBrowserDialog With {
+          .ShowNewFolderButton = True}
+        If Not String.IsNullOrEmpty(OutputTxt.Text) Then OutputBrowser.SelectedPath = IO.Path.GetDirectoryName(OutputTxt.Text)
+        Dim OkAction As MsgBoxResult = OutputBrowser.ShowDialog
+        If OkAction = MsgBoxResult.Ok Then
+            OutputTxt.Text = OutputBrowser.SelectedPath
         End If
     End Sub
 End Class

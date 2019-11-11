@@ -26,12 +26,13 @@ Partial Class Form1
         Me.Label2 = New System.Windows.Forms.Label()
         Me.InputTxt = New System.Windows.Forms.TextBox()
         Me.OutputTxt = New System.Windows.Forms.TextBox()
-        Me.InputBrowseBtn = New System.Windows.Forms.Button()
-        Me.OutputBrowseBtn = New System.Windows.Forms.Button()
+        Me.InputFileBrowseBtn = New System.Windows.Forms.Button()
+        Me.OutputFileBrowseBtn = New System.Windows.Forms.Button()
         Me.StartBtn = New System.Windows.Forms.Button()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.TwoPassEncoding = New System.Windows.Forms.CheckBox()
         Me.AdditionalArguments = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.columns = New System.Windows.Forms.NumericUpDown()
@@ -55,12 +56,13 @@ Partial Class Form1
         Me.Label14 = New System.Windows.Forms.Label()
         Me.ProgressLog = New System.Windows.Forms.RichTextBox()
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.NoPipes = New System.Windows.Forms.CheckBox()
         Me.ffmpegVersionLabel = New System.Windows.Forms.Label()
         Me.PauseResumeButton = New System.Windows.Forms.Button()
         Me.ClearLogBtn = New System.Windows.Forms.Button()
         Me.SaveLogBtn = New System.Windows.Forms.Button()
-        Me.TwoPassEncoding = New System.Windows.Forms.CheckBox()
-        Me.NoPipes = New System.Windows.Forms.CheckBox()
+        Me.InputFolderBrowseBtn = New System.Windows.Forms.Button()
+        Me.OutputFolderBrowseBtn = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.columns, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.rows, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -78,18 +80,18 @@ Partial Class Form1
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(3, 9)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(151, 13)
+        Me.Label1.Size = New System.Drawing.Size(192, 13)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "Step 1: Browse for an input file"
+        Me.Label1.Text = "Step 1: Browse for an input file or folder"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
         Me.Label2.Location = New System.Drawing.Point(3, 52)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(182, 13)
+        Me.Label2.Size = New System.Drawing.Size(185, 13)
         Me.Label2.TabIndex = 1
-        Me.Label2.Text = "Step 2: Output location and filename:"
+        Me.Label2.Text = "Step 2: Browse for an output location:"
         '
         'InputTxt
         '
@@ -97,7 +99,7 @@ Partial Class Form1
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.InputTxt.Location = New System.Drawing.Point(6, 26)
         Me.InputTxt.Name = "InputTxt"
-        Me.InputTxt.Size = New System.Drawing.Size(349, 20)
+        Me.InputTxt.Size = New System.Drawing.Size(252, 20)
         Me.InputTxt.TabIndex = 1
         '
         'OutputTxt
@@ -106,28 +108,28 @@ Partial Class Form1
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.OutputTxt.Location = New System.Drawing.Point(6, 68)
         Me.OutputTxt.Name = "OutputTxt"
-        Me.OutputTxt.Size = New System.Drawing.Size(349, 20)
+        Me.OutputTxt.Size = New System.Drawing.Size(252, 20)
         Me.OutputTxt.TabIndex = 3
         '
-        'InputBrowseBtn
+        'InputFileBrowseBtn
         '
-        Me.InputBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.InputBrowseBtn.Location = New System.Drawing.Point(361, 22)
-        Me.InputBrowseBtn.Name = "InputBrowseBtn"
-        Me.InputBrowseBtn.Size = New System.Drawing.Size(75, 23)
-        Me.InputBrowseBtn.TabIndex = 2
-        Me.InputBrowseBtn.Text = "Browse"
-        Me.InputBrowseBtn.UseVisualStyleBackColor = True
+        Me.InputFileBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.InputFileBrowseBtn.Location = New System.Drawing.Point(264, 23)
+        Me.InputFileBrowseBtn.Name = "InputFileBrowseBtn"
+        Me.InputFileBrowseBtn.Size = New System.Drawing.Size(75, 23)
+        Me.InputFileBrowseBtn.TabIndex = 2
+        Me.InputFileBrowseBtn.Text = "Browse File"
+        Me.InputFileBrowseBtn.UseVisualStyleBackColor = True
         '
-        'OutputBrowseBtn
+        'OutputFileBrowseBtn
         '
-        Me.OutputBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.OutputBrowseBtn.Location = New System.Drawing.Point(361, 66)
-        Me.OutputBrowseBtn.Name = "OutputBrowseBtn"
-        Me.OutputBrowseBtn.Size = New System.Drawing.Size(75, 23)
-        Me.OutputBrowseBtn.TabIndex = 4
-        Me.OutputBrowseBtn.Text = "Browse"
-        Me.OutputBrowseBtn.UseVisualStyleBackColor = True
+        Me.OutputFileBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.OutputFileBrowseBtn.Location = New System.Drawing.Point(264, 66)
+        Me.OutputFileBrowseBtn.Name = "OutputFileBrowseBtn"
+        Me.OutputFileBrowseBtn.Size = New System.Drawing.Size(75, 23)
+        Me.OutputFileBrowseBtn.TabIndex = 4
+        Me.OutputFileBrowseBtn.Text = "Browse File"
+        Me.OutputFileBrowseBtn.UseVisualStyleBackColor = True
         '
         'StartBtn
         '
@@ -188,6 +190,16 @@ Partial Class Form1
         Me.GroupBox1.TabIndex = 15
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Encoder Options"
+        '
+        'TwoPassEncoding
+        '
+        Me.TwoPassEncoding.AutoSize = True
+        Me.TwoPassEncoding.Location = New System.Drawing.Point(247, 58)
+        Me.TwoPassEncoding.Name = "TwoPassEncoding"
+        Me.TwoPassEncoding.Size = New System.Drawing.Size(58, 17)
+        Me.TwoPassEncoding.TabIndex = 46
+        Me.TwoPassEncoding.Text = "2-Pass"
+        Me.TwoPassEncoding.UseVisualStyleBackColor = True
         '
         'AdditionalArguments
         '
@@ -319,9 +331,9 @@ Partial Class Form1
         Me.Label9.AutoSize = True
         Me.Label9.Location = New System.Drawing.Point(62, 16)
         Me.Label9.Name = "Label9"
-        Me.Label9.Size = New System.Drawing.Size(68, 13)
+        Me.Label9.Size = New System.Drawing.Size(70, 13)
         Me.Label9.TabIndex = 18
-        Me.Label9.Text = "audio bitrate:"
+        Me.Label9.Text = "Audio Bitrate:"
         '
         'speed
         '
@@ -337,9 +349,9 @@ Partial Class Form1
         Me.Label7.AutoSize = True
         Me.Label7.Location = New System.Drawing.Point(6, 16)
         Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(39, 13)
+        Me.Label7.Size = New System.Drawing.Size(41, 13)
         Me.Label7.TabIndex = 2
-        Me.Label7.Text = "speed:"
+        Me.Label7.Text = "Speed:"
         '
         'RemoveTempFiles
         '
@@ -412,6 +424,8 @@ Partial Class Form1
         '
         'SplitContainer1.Panel1
         '
+        Me.SplitContainer1.Panel1.Controls.Add(Me.OutputFolderBrowseBtn)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.InputFolderBrowseBtn)
         Me.SplitContainer1.Panel1.Controls.Add(Me.NoPipes)
         Me.SplitContainer1.Panel1.Controls.Add(Me.ffmpegVersionLabel)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Label1)
@@ -421,9 +435,9 @@ Partial Class Form1
         Me.SplitContainer1.Panel1.Controls.Add(Me.Label6)
         Me.SplitContainer1.Panel1.Controls.Add(Me.OutputTxt)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Label5)
-        Me.SplitContainer1.Panel1.Controls.Add(Me.InputBrowseBtn)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.InputFileBrowseBtn)
         Me.SplitContainer1.Panel1.Controls.Add(Me.RemoveTempFiles)
-        Me.SplitContainer1.Panel1.Controls.Add(Me.OutputBrowseBtn)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.OutputFileBrowseBtn)
         Me.SplitContainer1.Panel1.Controls.Add(Me.StartBtn)
         Me.SplitContainer1.Panel1.Controls.Add(Me.Label8)
         Me.SplitContainer1.Panel1.Controls.Add(Me.BrowseTempLocation)
@@ -439,6 +453,16 @@ Partial Class Form1
         Me.SplitContainer1.Size = New System.Drawing.Size(1049, 393)
         Me.SplitContainer1.SplitterDistance = 448
         Me.SplitContainer1.TabIndex = 19
+        '
+        'NoPipes
+        '
+        Me.NoPipes.AutoSize = True
+        Me.NoPipes.Location = New System.Drawing.Point(151, 135)
+        Me.NoPipes.Name = "NoPipes"
+        Me.NoPipes.Size = New System.Drawing.Size(107, 17)
+        Me.NoPipes.TabIndex = 47
+        Me.NoPipes.Text = "Do not use Pipes"
+        Me.NoPipes.UseVisualStyleBackColor = True
         '
         'ffmpegVersionLabel
         '
@@ -481,25 +505,25 @@ Partial Class Form1
         Me.SaveLogBtn.Text = "Save Log"
         Me.SaveLogBtn.UseVisualStyleBackColor = True
         '
-        'TwoPassEncoding
+        'InputFolderBrowseBtn
         '
-        Me.TwoPassEncoding.AutoSize = True
-        Me.TwoPassEncoding.Location = New System.Drawing.Point(247, 58)
-        Me.TwoPassEncoding.Name = "TwoPassEncoding"
-        Me.TwoPassEncoding.Size = New System.Drawing.Size(58, 17)
-        Me.TwoPassEncoding.TabIndex = 46
-        Me.TwoPassEncoding.Text = "2-Pass"
-        Me.TwoPassEncoding.UseVisualStyleBackColor = True
+        Me.InputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.InputFolderBrowseBtn.Location = New System.Drawing.Point(345, 23)
+        Me.InputFolderBrowseBtn.Name = "InputFolderBrowseBtn"
+        Me.InputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
+        Me.InputFolderBrowseBtn.TabIndex = 48
+        Me.InputFolderBrowseBtn.Text = "Browse Folder"
+        Me.InputFolderBrowseBtn.UseVisualStyleBackColor = True
         '
-        'NoPipes
+        'OutputFolderBrowseBtn
         '
-        Me.NoPipes.AutoSize = True
-        Me.NoPipes.Location = New System.Drawing.Point(151, 135)
-        Me.NoPipes.Name = "NoPipes"
-        Me.NoPipes.Size = New System.Drawing.Size(107, 17)
-        Me.NoPipes.TabIndex = 47
-        Me.NoPipes.Text = "Do not use Pipes"
-        Me.NoPipes.UseVisualStyleBackColor = True
+        Me.OutputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.OutputFolderBrowseBtn.Location = New System.Drawing.Point(345, 65)
+        Me.OutputFolderBrowseBtn.Name = "OutputFolderBrowseBtn"
+        Me.OutputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
+        Me.OutputFolderBrowseBtn.TabIndex = 49
+        Me.OutputFolderBrowseBtn.Text = "Browse Folder"
+        Me.OutputFolderBrowseBtn.UseVisualStyleBackColor = True
         '
         'Form1
         '
@@ -531,8 +555,8 @@ Partial Class Form1
     Friend WithEvents Label2 As Label
     Friend WithEvents InputTxt As TextBox
     Friend WithEvents OutputTxt As TextBox
-    Friend WithEvents InputBrowseBtn As Button
-    Friend WithEvents OutputBrowseBtn As Button
+    Friend WithEvents InputFileBrowseBtn As Button
+    Friend WithEvents OutputFileBrowseBtn As Button
     Friend WithEvents StartBtn As Button
     Friend WithEvents Label5 As Label
     Friend WithEvents Label6 As Label
@@ -566,4 +590,6 @@ Partial Class Form1
     Friend WithEvents Label4 As Label
     Friend WithEvents TwoPassEncoding As CheckBox
     Friend WithEvents NoPipes As CheckBox
+    Friend WithEvents OutputFolderBrowseBtn As Button
+    Friend WithEvents InputFolderBrowseBtn As Button
 End Class
