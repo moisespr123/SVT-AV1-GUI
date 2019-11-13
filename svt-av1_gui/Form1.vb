@@ -521,8 +521,10 @@ Public Class Form1
             MediaInfoProcess = Process.Start(MediaInfoProcessInfo)
             MediaInfoProcess.WaitForExit()
         Catch ex As Exception
-            MessageBox.Show("SvtAv1EncApp.exe was not found. Exiting...")
-            Me.Close()
+            NoPipes.Checked = True
+            NoPipes.Enabled = False
+            My.Settings.NoPipes = True
+            My.Settings.Save()
         End Try
     End Sub
 
