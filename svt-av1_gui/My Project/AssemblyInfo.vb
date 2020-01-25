@@ -12,7 +12,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("A GUI for SVT-AV1")>
 <Assembly: AssemblyCompany("")>
 <Assembly: AssemblyProduct("rav1e_gui")>
-<Assembly: AssemblyCopyright("Copyright ©  2018 - 2019")>
+<Assembly: AssemblyCopyright("Copyright ©  2018 - 2020")>
 <Assembly: AssemblyTrademark("")>
 
 <Assembly: ComVisible(False)>
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("1.0.*")>
 
-<Assembly: AssemblyVersion("1.4.0.0")>
-<Assembly: AssemblyFileVersion("1.4.0.0")>
+<Assembly: AssemblyVersion("1.5.0.0")>
+<Assembly: AssemblyFileVersion("1.5.0.0")>

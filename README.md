@@ -2,7 +2,9 @@
 
 A GUI to convert video files to AV1 using SVT-AV1
 
-![v1.3 Screenshot](https://moisescardona.me/wp-content/uploads/2019/11/SVT-AV1-GUI-v1.3.png)
+![v1.5 Screenshot](https://moisescardona.me/wp-content/uploads/2020/01/SVT-AV1-GUI-v1.5-Main-Window.png)
+
+![v1.5 Advanced Options Screenshot](https://moisescardona.me/wp-content/uploads/2020/01/SVT-AV1-GUI-v1.5-Advanced-Options.png)
 
 I wrote this software to encode video files to AV1 using SVT-AV1.
 
