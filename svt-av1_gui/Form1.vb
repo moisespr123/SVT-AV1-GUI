@@ -63,10 +63,7 @@ Public Class Form1
         quantizer.Enabled = False
         rows.Enabled = False
         columns.Enabled = False
-        HME.Enabled = False
-        HME0.Enabled = False
-        HME1.Enabled = False
-        HME2.Enabled = False
+        AdvancedOptionsButton.Enabled = False
         AdditionalArguments.Enabled = False
         speed.Enabled = False
         tempLocationPath.Enabled = False
@@ -165,10 +162,7 @@ Public Class Form1
                                  quantizer.Enabled = True
                                  rows.Enabled = True
                                  columns.Enabled = True
-                                 HME.Enabled = True
-                                 HME0.Enabled = True
-                                 HME1.Enabled = True
-                                 HME2.Enabled = True
+                                 AdvancedOptionsButton.Enabled = True
                                  AdditionalArguments.Enabled = True
                                  tempLocationPath.Enabled = True
                                  BrowseTempLocation.Enabled = True
@@ -184,6 +178,10 @@ Public Class Form1
         MsgBox("Finished")
     End Function
     Private Function Run_svtav1(Input_File As String, Output_File As String, SecondPassEnabled As Boolean, Optional SecondPass As Boolean = False)
+        If IO.File.Exists(My.Settings.tempFolder + "/FirstPassComplete") And SecondPass = False Then
+            Run_svtav1(Input_File, Output_File, SecondPassEnabled, True)
+            Return True
+        End If
         UpdateLog("Getting Video Info")
         Dim InputPipe As New IO.Pipes.NamedPipeServerStream("in.y4m", IO.Pipes.PipeDirection.Out, -1, IO.Pipes.PipeTransmissionMode.Byte, IO.Pipes.PipeOptions.Asynchronous, PipeBuffer, 0)
         Dim SourceFrameCount As String = String.Empty
@@ -237,6 +235,10 @@ Public Class Form1
                     Exit While
                 End If
             End While
+            If SourceFrameCount = String.Empty Then
+                UpdateLog("This video cannot be encoded using pipes.")
+                Return True
+            End If
             If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty And Not Convert.ToDouble(SourceFrameRate) Mod 1 = 0 Then
                 SourceFrameNum = Convert.ToString(Convert.ToDouble(SourceFrameRate) * 1000)
                 SourceFrameDen = "1000"
@@ -252,6 +254,7 @@ Public Class Form1
             If My.Settings.HME0 Then SVTAV1CommandLineString += " -hme-l0 1 " Else SVTAV1CommandLineString += " -hme-l0 0 "
             If My.Settings.HME1 Then SVTAV1CommandLineString += " -hme-l1 1 " Else SVTAV1CommandLineString += " -hme-l1 0 "
             If My.Settings.HME2 Then SVTAV1CommandLineString += " -hme-l2 1 " Else SVTAV1CommandLineString += " -hme-l2 0 "
+            If My.Settings.ClosedGOP Then SVTAV1CommandLineString += " -irefresh-type 2"
             If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty Then
                 SVTAV1CommandLineString += " -fps " + SourceFrameRate
             Else
@@ -263,12 +266,12 @@ Public Class Form1
                     SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -output-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"""
                 Else
                     UpdateLog("Performing Second Pass Encoding")
-                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + "" + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
+                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
                 End If
             Else
                 SVTAV1CommandLineString += " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
             End If
-            UpdateLog(SVTAV1CommandLineString)
+            UpdateLog("Using the following SVT-AV1 parameters: " + SVTAV1CommandLineString)
             svtav1Process.StartInfo.Arguments = SVTAV1CommandLineString
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
@@ -291,6 +294,8 @@ Public Class Form1
             WriteByteAsync(InputPipe, Input_File)
             svtav1Process.WaitForExit()
             If SecondPassEnabled And Not SecondPass Then
+                UpdateLog("First Pass encoding complete!")
+                IO.File.WriteAllText(My.Settings.tempFolder + "/FirstPassComplete", "")
                 Run_svtav1(Input_File, Output_File, SecondPassEnabled, True)
             Else
                 UpdateLog("Video encoding complete.")
@@ -326,7 +331,10 @@ Public Class Form1
         InputPipe.Dispose()
     End Sub
     Private Function Run_svtav1_no_pipe(Temp_Location As String, Output_File As String, SecondPassEnabled As Boolean, Optional SecondPass As Boolean = False)
-        UpdateLog("Getting Video Info")
+        If IO.File.Exists(My.Settings.tempFolder + "/FirstPassComplete") And SecondPass = False Then
+            Run_svtav1_no_pipe(Temp_Location, Output_File, SecondPassEnabled, True)
+            Return True
+        End If
         UpdateLog("Encoding Video")
         Using svtav1Process As New Process()
             svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
@@ -335,6 +343,7 @@ Public Class Form1
             If My.Settings.HME0 Then SVTAV1CommandLineString += " -hme-l0 1 " Else SVTAV1CommandLineString += " -hme-l0 0 "
             If My.Settings.HME1 Then SVTAV1CommandLineString += " -hme-l1 1 " Else SVTAV1CommandLineString += " -hme-l1 0 "
             If My.Settings.HME2 Then SVTAV1CommandLineString += " -hme-l2 1 " Else SVTAV1CommandLineString += " -hme-l2 0 "
+            If My.Settings.ClosedGOP Then SVTAV1CommandLineString += " -irefresh-type 2"
             If SecondPassEnabled Then
                 If Not SecondPass Then
                     UpdateLog("Performing First Pass Encoding")
@@ -346,7 +355,7 @@ Public Class Form1
             Else
                 SVTAV1CommandLineString += " " + My.Settings.AdditionalArguments + " -i """ + Temp_Location + "/y4m-video.y4m"" -b """ + Output_File + """"
             End If
-            UpdateLog(SVTAV1CommandLineString)
+            UpdateLog("Using the following SVT-AV1 parameters: " + SVTAV1CommandLineString)
             svtav1Process.StartInfo.Arguments = SVTAV1CommandLineString
             svtav1Process.StartInfo.CreateNoWindow = True
             svtav1Process.StartInfo.RedirectStandardOutput = True
@@ -368,6 +377,8 @@ Public Class Form1
             svtav1Process.BeginErrorReadLine()
             svtav1Process.WaitForExit()
             If SecondPassEnabled And Not SecondPass Then
+                UpdateLog("First Pass encoding complete!")
+                IO.File.WriteAllText(My.Settings.tempFolder + "/FirstPassComplete", "")
                 Run_svtav1_no_pipe(Temp_Location, Output_File, SecondPassEnabled, True)
             Else
                 UpdateLog("Video encoding complete.")
@@ -392,7 +403,13 @@ Public Class Form1
     End Function
     Private Function clean_temp_folder(tempFolder As String) As Boolean
         For Each File As String In IO.Directory.GetFiles(tempFolder)
-            If IO.Path.GetExtension(File) = ".ivf" Or IO.Path.GetFileName(File) = "y4m-video.y4m" Or IO.Path.GetFileName(File) = "opus-audio.opus" Or IO.Path.GetFileName(File) = "lock" Or IO.Path.GetFileName(File) = "InputVideo" Or IO.Path.GetFileName(File) = "OutputStatFile" Then
+            If IO.Path.GetExtension(File) = ".ivf" Or
+                IO.Path.GetFileName(File) = "y4m-video.y4m" Or
+                IO.Path.GetFileName(File) = "opus-audio.opus" Or
+                IO.Path.GetFileName(File) = "lock" Or
+                IO.Path.GetFileName(File) = "InputVideo" Or
+                IO.Path.GetFileName(File) = "OutputStatFile" Or
+                IO.Path.GetFileName(File) = "FirstPassComplete" Then
                 IO.File.Delete(File)
             End If
         Next
@@ -445,10 +462,12 @@ Public Class Form1
         speed.Value = My.Settings.speed
         rows.Value = My.Settings.TilingRows
         columns.Value = My.Settings.TilingColumns
-        HME.Checked = My.Settings.HME
-        HME0.Checked = My.Settings.HME0
-        HME1.Checked = My.Settings.HME1
-        HME2.Checked = My.Settings.HME2
+        AdvancedOptions.HME.Checked = My.Settings.HME
+        AdvancedOptions.HME0.Checked = My.Settings.HME0
+        AdvancedOptions.HME1.Checked = My.Settings.HME1
+        AdvancedOptions.HME2.Checked = My.Settings.HME2
+        AdvancedOptions.OpenGOP.Checked = My.Settings.OpenGOP
+        AdvancedOptions.ClosedGOP.Checked = My.Settings.ClosedGOP
         AdditionalArguments.Text = My.Settings.AdditionalArguments
         audioBitrate.Value = My.Settings.AudioBitrate
         tempLocationPath.Text = My.Settings.tempFolder
@@ -664,34 +683,6 @@ Public Class Form1
         End If
     End Sub
 
-    Private Sub HME_CheckedChanged(sender As Object, e As EventArgs) Handles HME.CheckedChanged
-        If GUILoaded Then
-            My.Settings.HME = HME.Checked
-            My.Settings.Save()
-        End If
-    End Sub
-
-    Private Sub HME0_CheckedChanged(sender As Object, e As EventArgs) Handles HME0.CheckedChanged
-        If GUILoaded Then
-            My.Settings.HME0 = HME0.Checked
-            My.Settings.Save()
-        End If
-    End Sub
-
-    Private Sub HME1_CheckedChanged(sender As Object, e As EventArgs) Handles HME1.CheckedChanged
-        If GUILoaded Then
-            My.Settings.HME1 = HME1.Checked
-            My.Settings.Save()
-        End If
-    End Sub
-
-    Private Sub HME2_CheckedChanged(sender As Object, e As EventArgs) Handles HME2.CheckedChanged
-        If GUILoaded Then
-            My.Settings.HME2 = HME2.Checked
-            My.Settings.Save()
-        End If
-    End Sub
-
     Private Sub AdditionalArguments_TextChanged(sender As Object, e As EventArgs) Handles AdditionalArguments.TextChanged
         If GUILoaded Then
             My.Settings.AdditionalArguments = AdditionalArguments.Text
@@ -741,5 +732,9 @@ Public Class Form1
         If OkAction = MsgBoxResult.Ok Then
             OutputTxt.Text = OutputBrowser.SelectedPath
         End If
+    End Sub
+
+    Private Sub AdvancedOptionsButton_Click(sender As Object, e As EventArgs) Handles AdvancedOptionsButton.Click
+        AdvancedOptions.ShowDialog()
     End Sub
 End Class

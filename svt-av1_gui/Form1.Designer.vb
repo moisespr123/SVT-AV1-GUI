@@ -39,10 +39,6 @@ Partial Class Form1
         Me.Label11 = New System.Windows.Forms.Label()
         Me.rows = New System.Windows.Forms.NumericUpDown()
         Me.Label10 = New System.Windows.Forms.Label()
-        Me.HME2 = New System.Windows.Forms.CheckBox()
-        Me.HME1 = New System.Windows.Forms.CheckBox()
-        Me.HME0 = New System.Windows.Forms.CheckBox()
-        Me.HME = New System.Windows.Forms.CheckBox()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.quantizer = New System.Windows.Forms.NumericUpDown()
         Me.audioBitrate = New System.Windows.Forms.NumericUpDown()
@@ -56,13 +52,14 @@ Partial Class Form1
         Me.Label14 = New System.Windows.Forms.Label()
         Me.ProgressLog = New System.Windows.Forms.RichTextBox()
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
+        Me.OutputFolderBrowseBtn = New System.Windows.Forms.Button()
+        Me.InputFolderBrowseBtn = New System.Windows.Forms.Button()
         Me.NoPipes = New System.Windows.Forms.CheckBox()
         Me.ffmpegVersionLabel = New System.Windows.Forms.Label()
         Me.PauseResumeButton = New System.Windows.Forms.Button()
         Me.ClearLogBtn = New System.Windows.Forms.Button()
         Me.SaveLogBtn = New System.Windows.Forms.Button()
-        Me.InputFolderBrowseBtn = New System.Windows.Forms.Button()
-        Me.OutputFolderBrowseBtn = New System.Windows.Forms.Button()
+        Me.AdvancedOptionsButton = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.columns, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.rows, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -167,6 +164,7 @@ Partial Class Form1
         Me.GroupBox1.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.GroupBox1.Controls.Add(Me.AdvancedOptionsButton)
         Me.GroupBox1.Controls.Add(Me.TwoPassEncoding)
         Me.GroupBox1.Controls.Add(Me.AdditionalArguments)
         Me.GroupBox1.Controls.Add(Me.Label4)
@@ -174,10 +172,6 @@ Partial Class Form1
         Me.GroupBox1.Controls.Add(Me.Label11)
         Me.GroupBox1.Controls.Add(Me.rows)
         Me.GroupBox1.Controls.Add(Me.Label10)
-        Me.GroupBox1.Controls.Add(Me.HME2)
-        Me.GroupBox1.Controls.Add(Me.HME1)
-        Me.GroupBox1.Controls.Add(Me.HME0)
-        Me.GroupBox1.Controls.Add(Me.HME)
         Me.GroupBox1.Controls.Add(Me.Label3)
         Me.GroupBox1.Controls.Add(Me.quantizer)
         Me.GroupBox1.Controls.Add(Me.audioBitrate)
@@ -194,7 +188,7 @@ Partial Class Form1
         'TwoPassEncoding
         '
         Me.TwoPassEncoding.AutoSize = True
-        Me.TwoPassEncoding.Location = New System.Drawing.Point(247, 58)
+        Me.TwoPassEncoding.Location = New System.Drawing.Point(304, 35)
         Me.TwoPassEncoding.Name = "TwoPassEncoding"
         Me.TwoPassEncoding.Size = New System.Drawing.Size(58, 17)
         Me.TwoPassEncoding.TabIndex = 46
@@ -205,7 +199,7 @@ Partial Class Form1
         '
         Me.AdditionalArguments.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.AdditionalArguments.Location = New System.Drawing.Point(9, 98)
+        Me.AdditionalArguments.Location = New System.Drawing.Point(9, 82)
         Me.AdditionalArguments.Name = "AdditionalArguments"
         Me.AdditionalArguments.Size = New System.Drawing.Size(415, 20)
         Me.AdditionalArguments.TabIndex = 45
@@ -213,7 +207,7 @@ Partial Class Form1
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(6, 82)
+        Me.Label4.Location = New System.Drawing.Point(6, 66)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(108, 13)
         Me.Label4.TabIndex = 44
@@ -252,50 +246,6 @@ Partial Class Form1
         Me.Label10.Size = New System.Drawing.Size(37, 13)
         Me.Label10.TabIndex = 40
         Me.Label10.Text = "Rows:"
-        '
-        'HME2
-        '
-        Me.HME2.AutoSize = True
-        Me.HME2.Location = New System.Drawing.Point(185, 58)
-        Me.HME2.Name = "HME2"
-        Me.HME2.Size = New System.Drawing.Size(56, 17)
-        Me.HME2.TabIndex = 39
-        Me.HME2.Text = "HME2"
-        Me.HME2.UseVisualStyleBackColor = True
-        '
-        'HME1
-        '
-        Me.HME1.AutoSize = True
-        Me.HME1.Location = New System.Drawing.Point(123, 58)
-        Me.HME1.Name = "HME1"
-        Me.HME1.Size = New System.Drawing.Size(56, 17)
-        Me.HME1.TabIndex = 38
-        Me.HME1.Text = "HME1"
-        Me.HME1.UseVisualStyleBackColor = True
-        '
-        'HME0
-        '
-        Me.HME0.AutoSize = True
-        Me.HME0.Checked = True
-        Me.HME0.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.HME0.Location = New System.Drawing.Point(65, 58)
-        Me.HME0.Name = "HME0"
-        Me.HME0.Size = New System.Drawing.Size(56, 17)
-        Me.HME0.TabIndex = 37
-        Me.HME0.Text = "HME0"
-        Me.HME0.UseVisualStyleBackColor = True
-        '
-        'HME
-        '
-        Me.HME.AutoSize = True
-        Me.HME.Checked = True
-        Me.HME.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.HME.Location = New System.Drawing.Point(9, 58)
-        Me.HME.Name = "HME"
-        Me.HME.Size = New System.Drawing.Size(50, 17)
-        Me.HME.TabIndex = 36
-        Me.HME.Text = "HME"
-        Me.HME.UseVisualStyleBackColor = True
         '
         'Label3
         '
@@ -342,7 +292,6 @@ Partial Class Form1
         Me.speed.Name = "speed"
         Me.speed.Size = New System.Drawing.Size(50, 20)
         Me.speed.TabIndex = 6
-        Me.speed.Value = New Decimal(New Integer() {8, 0, 0, 0})
         '
         'Label7
         '
@@ -454,6 +403,26 @@ Partial Class Form1
         Me.SplitContainer1.SplitterDistance = 448
         Me.SplitContainer1.TabIndex = 19
         '
+        'OutputFolderBrowseBtn
+        '
+        Me.OutputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.OutputFolderBrowseBtn.Location = New System.Drawing.Point(345, 65)
+        Me.OutputFolderBrowseBtn.Name = "OutputFolderBrowseBtn"
+        Me.OutputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
+        Me.OutputFolderBrowseBtn.TabIndex = 49
+        Me.OutputFolderBrowseBtn.Text = "Browse Folder"
+        Me.OutputFolderBrowseBtn.UseVisualStyleBackColor = True
+        '
+        'InputFolderBrowseBtn
+        '
+        Me.InputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.InputFolderBrowseBtn.Location = New System.Drawing.Point(345, 23)
+        Me.InputFolderBrowseBtn.Name = "InputFolderBrowseBtn"
+        Me.InputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
+        Me.InputFolderBrowseBtn.TabIndex = 48
+        Me.InputFolderBrowseBtn.Text = "Browse Folder"
+        Me.InputFolderBrowseBtn.UseVisualStyleBackColor = True
+        '
         'NoPipes
         '
         Me.NoPipes.AutoSize = True
@@ -505,25 +474,15 @@ Partial Class Form1
         Me.SaveLogBtn.Text = "Save Log"
         Me.SaveLogBtn.UseVisualStyleBackColor = True
         '
-        'InputFolderBrowseBtn
+        'AdvancedOptionsButton
         '
-        Me.InputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.InputFolderBrowseBtn.Location = New System.Drawing.Point(345, 23)
-        Me.InputFolderBrowseBtn.Name = "InputFolderBrowseBtn"
-        Me.InputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
-        Me.InputFolderBrowseBtn.TabIndex = 48
-        Me.InputFolderBrowseBtn.Text = "Browse Folder"
-        Me.InputFolderBrowseBtn.UseVisualStyleBackColor = True
-        '
-        'OutputFolderBrowseBtn
-        '
-        Me.OutputFolderBrowseBtn.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.OutputFolderBrowseBtn.Location = New System.Drawing.Point(345, 65)
-        Me.OutputFolderBrowseBtn.Name = "OutputFolderBrowseBtn"
-        Me.OutputFolderBrowseBtn.Size = New System.Drawing.Size(91, 23)
-        Me.OutputFolderBrowseBtn.TabIndex = 49
-        Me.OutputFolderBrowseBtn.Text = "Browse Folder"
-        Me.OutputFolderBrowseBtn.UseVisualStyleBackColor = True
+        Me.AdvancedOptionsButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.AdvancedOptionsButton.Location = New System.Drawing.Point(304, 116)
+        Me.AdvancedOptionsButton.Name = "AdvancedOptionsButton"
+        Me.AdvancedOptionsButton.Size = New System.Drawing.Size(120, 23)
+        Me.AdvancedOptionsButton.TabIndex = 47
+        Me.AdvancedOptionsButton.Text = "Advanced Options"
+        Me.AdvancedOptionsButton.UseVisualStyleBackColor = True
         '
         'Form1
         '
@@ -578,10 +537,6 @@ Partial Class Form1
     Friend WithEvents quantizer As NumericUpDown
     Friend WithEvents ffmpegVersionLabel As Label
     Friend WithEvents Label3 As Label
-    Friend WithEvents HME2 As CheckBox
-    Friend WithEvents HME1 As CheckBox
-    Friend WithEvents HME0 As CheckBox
-    Friend WithEvents HME As CheckBox
     Friend WithEvents columns As NumericUpDown
     Friend WithEvents Label11 As Label
     Friend WithEvents rows As NumericUpDown
@@ -592,4 +547,5 @@ Partial Class Form1
     Friend WithEvents NoPipes As CheckBox
     Friend WithEvents OutputFolderBrowseBtn As Button
     Friend WithEvents InputFolderBrowseBtn As Button
+    Friend WithEvents AdvancedOptionsButton As Button
 End Class
