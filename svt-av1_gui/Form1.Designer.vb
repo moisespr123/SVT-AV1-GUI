@@ -32,6 +32,7 @@ Partial Class Form1
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.AdvancedOptionsButton = New System.Windows.Forms.Button()
         Me.TwoPassEncoding = New System.Windows.Forms.CheckBox()
         Me.AdditionalArguments = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
@@ -59,7 +60,6 @@ Partial Class Form1
         Me.PauseResumeButton = New System.Windows.Forms.Button()
         Me.ClearLogBtn = New System.Windows.Forms.Button()
         Me.SaveLogBtn = New System.Windows.Forms.Button()
-        Me.AdvancedOptionsButton = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.columns, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.rows, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -157,7 +157,7 @@ Partial Class Form1
         Me.Label6.Name = "Label6"
         Me.Label6.Size = New System.Drawing.Size(28, 13)
         Me.Label6.TabIndex = 12
-        Me.Label6.Text = "v1.5"
+        Me.Label6.Text = "v1.6"
         '
         'GroupBox1
         '
@@ -184,6 +184,16 @@ Partial Class Form1
         Me.GroupBox1.TabIndex = 15
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Encoder Options"
+        '
+        'AdvancedOptionsButton
+        '
+        Me.AdvancedOptionsButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.AdvancedOptionsButton.Location = New System.Drawing.Point(304, 116)
+        Me.AdvancedOptionsButton.Name = "AdvancedOptionsButton"
+        Me.AdvancedOptionsButton.Size = New System.Drawing.Size(120, 23)
+        Me.AdvancedOptionsButton.TabIndex = 47
+        Me.AdvancedOptionsButton.Text = "Advanced Options"
+        Me.AdvancedOptionsButton.UseVisualStyleBackColor = True
         '
         'TwoPassEncoding
         '
@@ -473,16 +483,6 @@ Partial Class Form1
         Me.SaveLogBtn.TabIndex = 19
         Me.SaveLogBtn.Text = "Save Log"
         Me.SaveLogBtn.UseVisualStyleBackColor = True
-        '
-        'AdvancedOptionsButton
-        '
-        Me.AdvancedOptionsButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.AdvancedOptionsButton.Location = New System.Drawing.Point(304, 116)
-        Me.AdvancedOptionsButton.Name = "AdvancedOptionsButton"
-        Me.AdvancedOptionsButton.Size = New System.Drawing.Size(120, 23)
-        Me.AdvancedOptionsButton.TabIndex = 47
-        Me.AdvancedOptionsButton.Text = "Advanced Options"
-        Me.AdvancedOptionsButton.UseVisualStyleBackColor = True
         '
         'Form1
         '

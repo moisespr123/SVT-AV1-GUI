@@ -249,24 +249,24 @@ Public Class Form1
         UpdateLog("Encoding Video")
         Using svtav1Process As New Process()
             svtav1Process.StartInfo.FileName = "SvtAv1EncApp.exe"
-            Dim SVTAV1CommandLineString As String = "-enc-mode " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " -tile-rows " + My.Settings.TilingRows.ToString() + " -tile-columns " + My.Settings.TilingColumns.ToString()
-            If My.Settings.HME Then SVTAV1CommandLineString += " -hme 1 " Else SVTAV1CommandLineString += " -hme 0 "
-            If My.Settings.HME0 Then SVTAV1CommandLineString += " -hme-l0 1 " Else SVTAV1CommandLineString += " -hme-l0 0 "
-            If My.Settings.HME1 Then SVTAV1CommandLineString += " -hme-l1 1 " Else SVTAV1CommandLineString += " -hme-l1 0 "
-            If My.Settings.HME2 Then SVTAV1CommandLineString += " -hme-l2 1 " Else SVTAV1CommandLineString += " -hme-l2 0 "
-            If My.Settings.ClosedGOP Then SVTAV1CommandLineString += " -irefresh-type 2"
+            Dim SVTAV1CommandLineString As String = "--preset " + My.Settings.speed.ToString() + " -q " + My.Settings.quantizer.ToString() + " --tile-rows " + My.Settings.TilingRows.ToString() + " --tile-columns " + My.Settings.TilingColumns.ToString()
+            If My.Settings.HME Then SVTAV1CommandLineString += " --hme 1 " Else SVTAV1CommandLineString += " --hme 0 "
+            If My.Settings.HME0 Then SVTAV1CommandLineString += " --hme-l0 1 " Else SVTAV1CommandLineString += " --hme-l0 0 "
+            If My.Settings.HME1 Then SVTAV1CommandLineString += " --hme-l1 1 " Else SVTAV1CommandLineString += " --hme-l1 0 "
+            If My.Settings.HME2 Then SVTAV1CommandLineString += " --hme-l2 1 " Else SVTAV1CommandLineString += " --hme-l2 0 "
+            If My.Settings.ClosedGOP Then SVTAV1CommandLineString += " --irefresh-type 2"
             If SourceFrameNum = String.Empty And SourceFrameDen = String.Empty Then
-                SVTAV1CommandLineString += " -fps " + SourceFrameRate
+                SVTAV1CommandLineString += " --fps " + SourceFrameRate
             Else
-                SVTAV1CommandLineString += " -fps-num " + SourceFrameNum + " -fps-denom " + SourceFrameDen
+                SVTAV1CommandLineString += " --fps-num " + SourceFrameNum + " --fps-denom " + SourceFrameDen
             End If
             If SecondPassEnabled Then
                 If Not SecondPass Then
                     UpdateLog("Performing First Pass Encoding")
-                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -output-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"""
+                    SVTAV1CommandLineString += " --enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" --output-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"""
                 Else
                     UpdateLog("Performing Second Pass Encoding")
-                    SVTAV1CommandLineString += " -enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
+                    SVTAV1CommandLineString += " --enc-mode-2p " + My.Settings.speed.ToString() + " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" --input-stat-file """ + My.Settings.tempFolder + "/OutputStatFile"" -b """ + Output_File + """"
                 End If
             Else
                 SVTAV1CommandLineString += " " + My.Settings.AdditionalArguments + " -n " + SourceFrameCount + " -w " + SourceWidth + " -h " + SourceHeight + " -i ""\\.\pipe\in.y4m"" -b """ + Output_File + """"
